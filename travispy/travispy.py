@@ -1,3 +1,4 @@
+#import requests_debugger 
 '''
 .. data:: PUBLIC
     :annotation: = URI for Travis CI free service.
@@ -13,6 +14,22 @@ from ._helpers import get_response_contents
 from .entities import Account, Branch, Broadcast, Build, Hook, Job, Log, Repo, Session, User, Setting
 import requests
 
+import logging
+
+
+import http.client as http_client
+
+#http_client.HTTPConnection.debuglevel = 999
+
+
+                                                                            
+##  You must initialize logging, otherwise you'll not see debug output.
+#logging.basicConfig()
+#logging.getLogger().setLevel(logging.DEBUG)
+# requests_log = logging.getLogger("requests.packages.urllib3")
+# requests_log.setLevel(logging.DEBUG)
+# requests_log.propagate = True
+        
 
 PUBLIC = 'https://api.travis-ci.org'
 PRIVATE = 'https://api.travis-ci.com'
@@ -47,7 +64,8 @@ class TravisPy:
 
     _HEADERS = {
         'User-Agent': 'TravisPy',
-        'Accept': 'application/vnd.travis-ci.2+json',
+        'Travis-API-Version' : '3',
+        #'Accept': 'application/vnd.travis-ci.2+json',
     }
 
     def __init__(self, token=None, uri=PUBLIC):
@@ -55,6 +73,7 @@ class TravisPy:
         session.headers.update(self._HEADERS)
         if token is not None:
             session.headers['Authorization'] = 'token %s' % token
+        print(session.headers)
 
     @classmethod
     def github_auth(cls, token, uri=PUBLIC):
@@ -76,6 +95,7 @@ class TravisPy:
         })
         contents = get_response_contents(response)
         access_token = contents['access_token']
+        print("access_token",access_token)
         return TravisPy(access_token, uri)
 
     def accounts(self, all=False):
@@ -180,7 +200,7 @@ class TravisPy:
 
         :rtype: :class:`.Build`
         '''
-        return Build.find_one(self._session, build_id)
+        return Build.find_one3(self._session, build_id)
 
     def hooks(self):
         '''
@@ -277,7 +297,7 @@ class TravisPy:
         .. note::
             This request always needs to be authenticated.
         '''
-        return User.find_one(self._session, '')
+        return User.find_one2(self._session, '')
 
     def settings(self, repo_id_or_slug, **kwargs):
         '''

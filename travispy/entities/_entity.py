@@ -64,6 +64,21 @@ class Entity(object):
             API command for retrieving one object.
         '''
         return '/%s/%s' % (command, entity_id,)
+    @classmethod
+    def _find_one_command2(cls, command, **kwargs):
+        '''
+        :param str command:
+            Command name.
+
+        :type entity_id: int | str
+        :param entity_id:
+            Entity identification.
+
+        :rtype: str
+        :returns:
+            API command for retrieving one object.
+        '''
+        return '/%s' % (command)
 
     @classmethod
     def find_one(cls, session, entity_id, **kwargs):
@@ -84,17 +99,100 @@ class Entity(object):
         from travispy.entities import COMMAND_TO_ENTITY
 
         command = cls.one()
+        print(command)
+        print(**kwargs)
+        print(entity_id)
+        print(cls)
         response = session.get(
             session.uri +
-            cls._find_one_command(cls.many(), str(entity_id), **kwargs)
+            cls._find_one_command(command, str(entity_id), **kwargs)
         )
-
+        #print("contents",response.json())
         contents = get_response_contents(response)
-        if command not in contents:
-            return
+        print("step1",contents)
+        result = cls._load(contents, session)
+        print("step2",result)
+        for name in contents.keys():
+            #print(name)
+            # Unknown entity.
+            if name not in COMMAND_TO_ENTITY:
+                continue
+            
+            entity_class = COMMAND_TO_ENTITY[name]
+            #print(entity_class)
+            dependency = entity_class._load(contents[name], session)
+            if name == entity_class.one():
+                dependency = dependency[0]
 
-        info = contents.pop(command, {})
-        result = cls._load(info, session)[0]
+            setattr(result, name, dependency)
+
+        return result
+    @classmethod
+    def find_one3(cls, session, entity_id, **kwargs):
+        from travispy.entities import COMMAND_TO_ENTITY
+        command = cls.one()
+        #print(command)
+        #print(**kwargs)
+        #print(entity_id)
+        #print(cls)
+        response = session.get(
+            session.uri +
+            cls._find_one_command(command, str(entity_id), **kwargs)
+        )
+        #print("contents",response.json())
+        contents = get_response_contents(response)
+        #print("step1",contents)
+        result = cls._load(contents, session)[0]
+        #print("step2",result)
+        for name in contents.keys():
+            #print(name)
+            # Unknown entity.
+            if name not in COMMAND_TO_ENTITY:
+                continue
+            
+            entity_class = COMMAND_TO_ENTITY[name]
+            #print(entity_class)
+            dependency = entity_class._load(contents[name], session)
+            if name == entity_class.one():
+                dependency = dependency[0]
+            setattr(result, name, dependency)
+        return result
+    
+    @classmethod
+    def find_one2(cls, session, entity_id, **kwargs):
+        '''
+        Method responsible for returning exactly one instance of current class.
+
+        :type session: :class:`.Session`
+        :param session:
+            Session that must be used to search for result.
+
+        :param int entity_id:
+            The ID of the entity.
+
+        :rtype: :class:`.Entity`
+
+        :raises TravisError: when response has status code different than 200.
+        '''
+        from travispy.entities import COMMAND_TO_ENTITY
+
+        command = cls.one()
+        print(command)
+        print(**kwargs)
+        print(entity_id)
+        print(cls)
+        response = session.get(
+            session.uri +
+            cls._find_one_command2(command, **kwargs)
+        )
+        print(response)
+        print(response.json())
+        contents = get_response_contents(response)
+        #if command not in contents:
+        #    return
+
+        #info = contents.pop(command, {})
+        result = cls._load(contents, session)[0]
 
         for name in contents.keys():
 
@@ -150,9 +248,11 @@ class Entity(object):
         result = cls._load(infos, session)
 
         for name in contents.keys():
-            entity_class = COMMAND_TO_ENTITY[name]
-            dependencies_result[entity_class.one()] = \
-                entity_class._load(contents[name], session)
+            #print("DEBUG",name)
+            if name in COMMAND_TO_ENTITY:
+                entity_class = COMMAND_TO_ENTITY[name]
+                dependencies_result[entity_class.one()] = \
+                                                          entity_class._load(contents[name], session)
 
         # Injecting dependencies into main objects.
         for i, entity in enumerate(result):

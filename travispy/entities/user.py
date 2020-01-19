@@ -1,5 +1,5 @@
 from ._entity import Entity
-
+import pprint
 
 class User(Entity):
     '''
@@ -57,5 +57,17 @@ class User(Entity):
             ``True`` if sync request was send successfuly to |travisci| and response code is 200
             ``False`` if a sync is already is progress
         '''
-        response = self._session.post(self._session.uri + '/users/sync')
+        response = self._session.post(self._session.uri + '/users/sync', params={'limit': 10})
+        
         return response.status_code == 200
+    
+    def repos (self):
+        #pprint.pprint(self.__dict__)
+        #pprint.pprint(self.__cache__)
+        #pprint.pprint(dir(self))
+        login = self.login
+        print("login",self.login, 
+              "name", self.name)
+        response = self._session.get(self._session.uri + '/owner/{login}/repos'.format(login=login))
+        
+        return response.json()

@@ -17,8 +17,10 @@ def get_response_contents(response):
     status_code = response.status_code
     try:
         contents = response.json()
+        #print("JSON",contents)
     except:
         error = response.text.strip()
+        print("ERROR",error)
         if not error:
             error = textwrap.dedent('''
                 Unexpected error

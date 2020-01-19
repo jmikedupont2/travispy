@@ -90,8 +90,15 @@ class Job(Restartable):
         :returns:
             A :class:`.Log` object with information related to current ``log_id``.
         '''
-        from .log import Log
-        return self._load_one_lazy_information(Log)
+        #from .log import Log
+        #return self._load_one_lazy_information(Log)
+        jobid = self.id
+        #print("login",self.login, 
+        #          "name", self.name)
+        response = self._session.get(self._session.uri + '/job/{job}/log'.format(job=jobid))
+        
+        return response.json()
+
 
     @classmethod
     def find_one(cls, session, entity_id, **kwargs):
