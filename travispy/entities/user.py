@@ -2,6 +2,11 @@ from ._entity import Entity
 import pprint
 
 class User(Entity):
+    @classmethod
+    def create(cls, session):
+        return cls(session)
+    #def __init__(self, session):
+    #    super().__init__(session)
     '''
     :ivar str login:
         User login on |github|.

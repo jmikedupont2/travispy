@@ -5,7 +5,7 @@ from travispy._helpers import get_response_contents
 log = logging.getLogger(__name__)
 
 
-class Entity(object):
+class Entity:
     '''
     Base class for all |travisci| entities.
 
@@ -17,18 +17,22 @@ class Entity(object):
         The entity ID.
     '''
 
-    __slots__ = [
-        'id',
-        '_session',
-        '__cache',
-    ]
+    # __slots__ = [
+    #     'id',
+    #     '_session',
+    #     '__cache',
+    # ]
 
     def __init__(self, session):
+
+        #if not hasattr(self,'data'):
+        #    setattr(self,'data',{})
+        self._data = {}
         self._session = session
 
         # A dictionary used to cache objects loaded from lazy information.
         self.__cache = {}
-
+        
     @classmethod
     def one(cls):
         '''
@@ -125,7 +129,8 @@ class Entity(object):
                 dependency = dependency[0]
 
             setattr(result, name, dependency)
-
+            result._data[name] = dependency
+        
         return result
     @classmethod
     def find_one3(cls, session, entity_id, **kwargs):
@@ -156,6 +161,7 @@ class Entity(object):
             if name == entity_class.one():
                 dependency = dependency[0]
             setattr(result, name, dependency)
+            result._data[name] = dependency
         return result
     
     @classmethod
@@ -206,6 +212,8 @@ class Entity(object):
                 dependency = dependency[0]
 
             setattr(result, name, dependency)
+            result._data[name] = dependency
+            #result.
 
         return result
 
@@ -258,6 +266,7 @@ class Entity(object):
         for i, entity in enumerate(result):
             for dependency_name, dependencies in dependencies_result.items():
                 setattr(entity, dependency_name, dependencies[i])
+                result._data[dependency_name]= dependencies[i]
 
         return result
 
@@ -293,6 +302,7 @@ class Entity(object):
                         key = '_body'
                 try:
                     setattr(entity, key, value)
+                    entity._data[key] = value
                 except AttributeError:
                     log.debug('Unknown {0} attribute {1}'.format(
                         entity.__class__.__name__, key))
@@ -418,5 +428,5 @@ class Entity(object):
             'ids',
         )
 
-    def __getitem__(self, key):
-        return getattr(self, key)
+    #def __getitem__(self, key):
+    #    return getattr(self, key)
